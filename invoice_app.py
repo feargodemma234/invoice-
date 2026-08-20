@@ -116,14 +116,14 @@ if not st.session_state.logged_in:
 else:
     st.title(f"{st.session_state.business}")
     col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Free Invoices Left", st.session_state.invoices_left)
-    with col2:
-        st.metric("Items on Invoice", len(st.session_state.items))
-    with col3:
-        if st.session_state.invoices_left <= 0:
-            st.link_button("Upgrade ₦500/mo", "https://opay.ng/s/36QEa", type="primary")
-
+with col1:
+    st.metric("Free Invoices Left", st.session_state.invoices_left)
+with col2:
+    item_count = len(st.session_state.items) if isinstance(st.session_state.items, list) else 0
+    st.metric("Items on Invoice", item_count)
+with col3:
+    if st.session_state.invoices_left <= 0:
+        st.link_button("Upgrade ₦500/mo", "https://opay.ng/s/36QEa", type="primary")
     st.sidebar.title("⚙️ Settings")
     new_business = st.sidebar.text_input("Business Name", st.session_state.business)
     logo = st.sidebar.file_uploader("Upload Logo", type=['png','jpg','jpeg'])
