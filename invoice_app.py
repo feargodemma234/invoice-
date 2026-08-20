@@ -147,6 +147,52 @@ else:
             if st.session_state.invoices_left <= 0:
                 st.error("No free invoices left. Please upgrade")
             else:
+    # SAFETY FIX: Force items to be a list
+    if not isinstance(st.session_state.items, list):
+        st.session_state.items = []
+
+    st.title(f"{st.session_state.business}")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Free Invoices Left", st.session_state.invoices_left)
+    with col2:
+        st.metric("Items on Invoice", len(st.session_state.items))
+    with col3:
+        if st.session_state.invoices_left <= 0:
+            st.link_button("Upgrade ₦500/mo", "https://opay.ng/s/36QEa", type="primary")
+
+    st.sidebar.title("⚙️ Settings")
+    if st.sidebar.button("Logout"):
+        for key in st.session_state.keys():
+            del st.session_state[key]
+        st.rerun()
+
+    st.header("Create New Invoice")
+    customer = st.text_input("Customer Name / WhatsApp Number")
+
+    with st.form("item_form", clear_on_submit=True):
+        col1, col2, col3 = st.columns([3,1,2])
+        item_name = col1.text_input("Item Name")
+        qty = col2.number_input("Qty", min_value=1, value=1, step=1)
+        price = col3.number_input("Price ₦", min_value=0, step=100)
+        if st.form_submit_button("Add Item"):
+            if item_name:
+                st.session_state.items.append((item_name, int(qty), int(price)))
+                st.rerun()
+
+    if len(st.session_state.items) > 0:
+        st.subheader("Invoice Items")
+        for i, item in enumerate(st.session_state.items):
+            st.write(f"**{i+1}.** {item[0]} - {item[1]} x ₦{item[2]:,}")
+
+        total = sum([item[1]*item[2] for item in st.session_state.items])
+        st.subheader(f"Total: ₦{total:,}")
+
+        if st.button("Generate PDF Invoice", type="primary"):
+            if st.session_state.invoices_left <= 0:
+                st.error("No free invoices left. Please upgrade")
+            else:
                 pdf_file = generate_pdf(st.session_state.items, customer, total)
                 st.success("Invoice Generated!")
                 with open(pdf_file, "rb") as f:
